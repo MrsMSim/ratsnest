@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rats’ Nests Reading Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading card under a sticky-free header — part picker, numbered practice steps, then the story text with a control strip on top. */
+:root{
+  --bg:#FBF6F9;          /* paper with a wallpaper-pink tint */
+  --wall:#F4E4EC;        /* pink wallpaper band */
+  --card:#FFFFFF;
+  --ink:#2B1F33;         /* plum-black */
+  --soft:#6E5F77;
+  --line:#E6D6E0;
+  --mum:#A3264B;         /* Mum's cardigan / title maroon */
+  --millie:#1F7A74;      /* Millie's teal jumper */
+  --gold:#E59A2F;        /* cover orange */
+  --hl:#FFE19A;          /* reading highlight */
+  --yours:#D6F1EE;       /* your-turn wash */
+  --scoop:#E59A2F;
+  --miss:#C2263B; --missbg:#FBDDE2;
+  --ok:#1F7A4D;
+  --btn:#2B1F33; --btnfg:#FFFFFF;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --read:"Lexend","Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1A1420;--wall:#251B2C;--card:#221A29;--ink:#F3EAF1;--soft:#B8A9BF;--line:#3A2E43;
+  --mum:#F08AA6;--millie:#6FD3C9;--gold:#F2B357;--hl:#5C4414;--yours:#163E3B;--scoop:#F2B357;
+  --miss:#FF8D9C;--missbg:#4A1E27;--ok:#7FD9A6;--btn:#F3EAF1;--btnfg:#1A1420;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1A1420;--wall:#251B2C;--card:#221A29;--ink:#F3EAF1;--soft:#B8A9BF;--line:#3A2E43;
+  --mum:#F08AA6;--millie:#6FD3C9;--gold:#F2B357;--hl:#5C4414;--yours:#163E3B;--scoop:#F2B357;
+  --miss:#FF8D9C;--missbg:#4A1E27;--ok:#7FD9A6;--btn:#F3EAF1;--btnfg:#1A1420;color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--read);font-size:16px;line-height:1.5}
+.wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header svg{width:84px;height:60px;flex:none}
+.titles{min-width:0}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,6vw,2.8rem);line-height:1;margin:0;color:var(--mum);text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--soft);font-size:.95rem}
+
+.label{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);font-weight:600;margin:0 0 8px}
+
+.parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.part{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px 10px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.part b{font-family:var(--display);font-size:1.35rem;line-height:1}
+.part small{font-size:.72rem;color:var(--soft);line-height:1.2}
+.part .dots{display:flex;gap:3px;margin-top:4px}
+.part .dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.part .dots i.on{background:var(--gold)}
+.part[aria-pressed="true"]{border-color:var(--mum);background:var(--wall)}
+
+.modes{display:flex;flex-wrap:wrap;gap:8px}
+.mode{border:0;background:var(--wall);border-radius:999px;padding:8px 16px;font-weight:500;display:flex;gap:8px;align-items:center}
+.mode span{font-family:var(--display);font-weight:800;background:var(--card);border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-size:.85rem}
+.mode[aria-pressed="true"]{background:var(--btn);color:var(--btnfg)}
+.mode[aria-pressed="true"] span{background:var(--gold);color:#2B1F33}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.panel{background:var(--wall);padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.panel h2{font-family:var(--display);font-size:1.3rem;margin:0;line-height:1.2}
+.panel p{margin:0;color:var(--soft);max-width:65ch}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.b{border:0;border-radius:10px;padding:10px 16px;font-weight:600;background:var(--btn);color:var(--btnfg);display:inline-flex;gap:8px;align-items:center;min-height:44px}
+.b.alt{background:var(--card);color:var(--ink);border:2px solid var(--line)}
+.b.go{background:var(--millie);color:#fff}
+.b.big{font-size:1.1rem;padding:12px 22px}
+.b:disabled{opacity:.4;cursor:default}
+.seg-toggle{display:inline-flex;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg-toggle button{border:0;background:none;padding:8px 12px;font-weight:500;min-height:40px}
+.seg-toggle button[aria-pressed="true"]{background:var(--btn);color:var(--btnfg)}
+.note{font-size:.9rem;color:var(--soft)}
+.pill{display:inline-block;background:var(--card);border-radius:999px;padding:2px 10px;font-size:.85rem;font-weight:600}
+
+.tools{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--line)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.85rem}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:currentColor;vertical-align:-1px}
+.lg-u{color:var(--mum)}.lg-i{color:var(--millie)}.lg-n{color:var(--ink)}
+.switches{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;font-size:.85rem;font-weight:500;min-height:36px}
+.chip[aria-pressed="true"]{border-color:var(--gold);background:var(--wall)}
+
+.words{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.wc{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.wc b{font-size:1.25rem;font-weight:600}
+.wc .syl{font-size:.9rem;color:var(--gold);font-weight:600;letter-spacing:.02em}
+.wc .mean{font-size:.85rem;color:var(--soft)}
+.wc:hover{border-color:var(--gold)}
+
+.read{padding:22px 24px 26px;font-size:var(--rs,22px);line-height:2.15;max-width:none}
+.read p{margin:0 0 .7em;max-width:38em}
+.lnum{font-size:.55em;color:var(--soft);font-weight:500;margin-right:.6em;vertical-align:.15em;font-variant-numeric:tabular-nums}
+.ph{border-radius:6px;transition:background .15s,opacity .2s;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 2px}
+.scoops .ph{border-bottom:3px solid var(--scoop);border-radius:0 0 16px 16px;padding-bottom:1px}
+.colours .spk-u{color:var(--mum)}
+.colours .spk-i{color:var(--millie)}
+.ph.now{background:var(--hl)}
+.ph.dim{opacity:.35}
+.seg.mine .ph{text-decoration:underline dotted var(--millie) 2px;text-underline-offset:6px}
+.seg.yours .ph{background:var(--yours);text-decoration:none}
+.listen .ph{cursor:pointer}
+.w{border-radius:4px}
+.w.found{background:var(--hl);outline:2px solid var(--gold)}
+.marking .w{cursor:pointer}
+.marking .w:hover{outline:2px dashed var(--miss)}
+.w.miss{background:var(--missbg);color:var(--miss);text-decoration:line-through 2px}
+.w.heard{color:var(--ok);font-weight:600}
+
+.timer{font-family:var(--display);font-weight:800;font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--card);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-family:var(--display);font-size:1.8rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat small{color:var(--soft);font-size:.8rem}
+.stat.hero b{color:var(--millie)}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px}
+.checks label{display:flex;gap:8px;align-items:center;background:var(--card);border-radius:10px;padding:8px 10px;font-size:.95rem}
+.checks input{width:20px;height:20px;accent-color:var(--millie)}
+.tries{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cue{font-family:var(--display);font-size:1.25rem;font-weight:800;color:var(--millie)}
+footer{color:var(--soft);font-size:.8rem}
+@media (max-width:520px){.read{padding:16px;line-height:2}.panel,.tools{padding-left:14px;padding-right:14px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 120 84" aria-hidden="true">
+      <path d="M14 60 C2 58 2 44 14 46 C24 48 22 68 6 72" fill="none" stroke="var(--soft)" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="54" cy="56" rx="36" ry="20" fill="var(--soft)"/>
+      <ellipse cx="58" cy="66" rx="22" ry="9" fill="var(--card)"/>
+      <circle cx="88" cy="46" r="15" fill="var(--soft)"/>
+      <circle cx="82" cy="31" r="8" fill="var(--soft)"/><circle cx="82" cy="31" r="4.5" fill="var(--mum)" opacity=".55"/>
+      <path d="M98 42 L112 50 L98 54 Z" fill="var(--soft)"/>
+      <circle cx="112" cy="50" r="3" fill="var(--mum)"/>
+      <circle cx="94" cy="44" r="2.6" fill="var(--ink)"/>
+      <path d="M108 50 L120 46 M108 51 L120 54" stroke="var(--soft)" stroke-width="1.2"/>
+    </svg>
+    <div class="titles">
+      <h1>Rats’ Nests</h1>
+      <p class="sub">by Diana Noonan · STELLAR P4 · Reading fluency practice</p>
+    </div>
+  </header>
+
+  <section>
+    <p class="label">Choose a part of the story</p>
+    <div class="parts" id="parts"></div>
+  </section>
+
+  <section>
+    <p class="label">Practise in 5 steps</p>
+    <div class="modes" id="modes"></div>
+  </section>
+
+  <section class="card">
+    <div class="panel" id="panel"></div>
+    <div class="tools">
+      <div class="legend"><span class="lg-n">Storyteller</span><span class="lg-u">Mum</span><span class="lg-i">Millie</span></div>
+      <div class="switches">
+        <button class="chip" id="tScoop" aria-pressed="true">Phrase scoops</button>
+        <button class="chip" id="tCol" aria-pressed="true">Character colours</button>
+        <button class="chip" id="fMinus" aria-label="Smaller text">A−</button>
+        <button class="chip" id="fPlus" aria-label="Bigger text">A+</button>
+      </div>
+    </div>
+    <div class="read scoops colours" id="text"></div>
+  </section>
+
+  <footer>Line numbers match the STELLAR reader. Your progress and scores stay on this device.</footer>
+</div>
+
+<script>
+/* ---------- Story data: {u:…} = Mum, {i:…} = Millie, / = phrase break ---------- */
+const PARTS=[
+{t:"Absolutely not!",l:[1,10],paras:[
+"{u:“No!”} said Mum. {u:“Absolutely not!”}",
+"{i:“But he’s called Atom,”} said Millie.",
+"{u:“I don’t care / what he’s called,”} said Mum. {u:“I am not having / a smelly rat / in the house.”}",
+"{i:“It’s mice that stink,”} said Millie, {i:“not rats. / Couldn’t he live / in my room?”}",
+"{u:“Your room / is already / a rat’s nest,”} said Mum. {u:“If you took better care / of your bedroom, / I might not mind / you keeping a pet in there – / a goldfish / or a budgie / or something. / But not a rat!”}"],
+words:[["absolutely","ab·so·lute·ly","completely; for sure"],["smelly","smel·ly","has a bad smell"],["stink","stink","to smell very bad"],["budgie","bud·gie","a small pet bird"]]},
+{t:"Millie’s plan",l:[11,21],paras:[
+"Millie did not know / what to do. / That morning, / when Jack Miller begged her / to give Atom a home, / it had seemed so easy / to say yes. / It was easy enough / once Mum was out in the garden / to shift Atom / from the garage, / where she had left him / with a sack over his cage / after school, / to under her bed.",
+"Millie thought hard. / Atom could not go back / to the lab / that Jack’s brother, Luke, / had rescued him from. / She would just have to keep him / under the bed – / and Mum out of her room. / The plan swung into action / that night."],
+words:[["begged","begged","asked again and again"],["shift","shift","to move something"],["garage","ga·rage","a room for keeping a car"],["sack","sack","a big bag of rough cloth"],["rescued","res·cued","saved from danger"],["lab","lab","a place where scientists do tests"]]},
+{t:"Folded clothes",l:[22,31],paras:[
+"{u:“Let’s see / if I can wade my way / into your room / with these,”} said Mum, / her arms full of folded clothes.",
+"{i:“I’ll put them away,”} said Millie.",
+"Mum looked surprised / as Millie grabbed / the pile of clothes / and marched into her room. {u:“Don’t scrunch them up / in your drawer!”} she called out / behind her.",
+"In her room, / Millie put the clothes away. / Then she picked up / her dirty socks and shirt / from the floor.",
+"{u:“Good grief!”} said Mum / when she saw Millie / taking them / to the laundry basket."],
+words:[["wade","wade","to walk slowly, with effort"],["folded","fold·ed","bent over neatly"],["surprised","sur·prised","did not expect it"],["marched","marched","walked quickly, in a determined way"],["scrunch","scrunch","to squeeze into a messy ball"],["laundry","laun·dry","clothes to be washed"]]},
+{t:"A busy night",l:[32,42],paras:[
+"That night, / before she went to bed, / Millie scooped up / everything else / from the floor of her room / and shoved it all / in the wardrobe. / Then she remembered her lunchbox – / Mum always came hunting for it. / She took it out / to the kitchen / and grabbed a handful of cereal / for Atom / at the same time.",
+"Just when Millie / was finally ready for bed, / Atom began rustling – / big time. / Millie turned on some music / so that Mum would not hear / all the noise / when she came in / to say goodnight."],
+words:[["scooped","scooped","picked up quickly"],["shoved","shoved","pushed roughly"],["wardrobe","ward·robe","a tall cupboard for clothes"],["hunting","hunt·ing","looking hard for something"],["cereal","ce·re·al","breakfast food, like cornflakes"],["rustling","rus·tling","a soft, crackly sound"]]},
+{t:"All that week",l:[43,52],paras:[
+"All that week, / Millie made her own bed / before she went to school. / She even vacuumed her floor / so that Mum / would not have to do it.",
+"{u:“Did you vacuum / under the bed?”} asked Mum / suspiciously.",
+"{i:“Yep,”} said Millie. {i:“All those dead flies – / yuck!”}",
+"By Friday night, / Millie was sure / that Mum was never going / to find Atom. / It was Saturday morning / that changed her mind."],
+words:[["vacuumed","vac·uumed","cleaned with a vacuum cleaner"],["suspiciously","sus·pi·cious·ly","as if she thinks something is wrong"],["Saturday","Sat·ur·day",""],["changed","changed","made different"]]},
+{t:"Breakfast in bed",l:[53,73],paras:[
+"{u:“Ta-da!”} said Mum. / She pushed open the door / to Millie’s bedroom / with one foot / and came in / carrying a surprise breakfast / in bed. {u:“This is for the girl / who’s worked so hard / all week / to keep her room / looking good,”} smiled Mum, / holding out the tray.",
+"Millie would never know / if it was the smell / of the waffles and golden syrup / or the peanut butter and toast / that stirred Atom up, / but suddenly / there was a huge rustling / and scuffling / from under the bed. / Then the bars of Atom’s cage / clanged / as he threw himself / against them."],
+words:[["breakfast","break·fast","the first meal of the day"],["waffles","waf·fles","crispy cakes with little squares"],["syrup","syr·up","a sweet, sticky sauce"],["suddenly","sud·den·ly","quickly, without warning"],["scuffling","scuf·fling","quick scratching noises"],["clanged","clanged","made a loud metal sound"]]},
+{t:"Under the bed",l:[74,86],paras:[
+"{u:“Don’t tell me / we’ve got rats in here,”} said Mum.",
+"The next minute, / she had put down the tray / and was on her hands and knees / looking under the bed.",
+"{i:“He was going to be used / in an experiment / if I didn’t take him!”} said Millie. {i:“You didn’t know he was there / till he rustled, / so you can’t say / he smells. / I’m sorry, Mum, / but he can’t go back / to the lab.”}",
+"{u:“He’s got / a very white tummy,”} said Mum. {u:“Look – / he’s pressing it up / against the bars.”}",
+"Millie could not believe her ears. / Mum was not making / a huge fuss. / Millie pulled back her blanket / and knelt down / to look under the bed."],
+words:[["experiment","ex·per·i·ment","a test done by scientists"],["tummy","tum·my","stomach"],["pressing","press·ing","pushing against"],["believe","be·lieve","think it is true"],["fuss","fuss","a lot of worry or anger"],["knelt","knelt","went down on her knees"]]},
+{t:"Mum knew",l:[87,98],paras:[
+"{u:“Did you really think / I didn’t know / he was here?”} asked Mum.",
+"{i:“Huh?”} said Millie.",
+"{u:“I wasn’t born yesterday,”} said Mum. {u:“I knew / there had to be a reason / why you were keeping your room / so tidy. / And the cereal / has sure been disappearing fast / this week.”}",
+"Millie did not know / what to say. {i:“Does that mean / I can keep him?”} she finally asked.",
+"Mum slid Atom’s cage out / from under the bed. {u:“I’m sure / he doesn’t like being / in the dark / all the time,”} she said. / Then she looked at Millie. {u:“You know, / it really is wrong / to hide things from me,”} she added."],
+words:[["yesterday","yes·ter·day","the day before today"],["reason","rea·son","why something happens"],["disappearing","dis·ap·pear·ing","going away so you can’t see it"],["finally","fi·nal·ly","at last"],["added","add·ed","said more"]]},
+{t:"The deal",l:[99,106],paras:[
+"{i:“The problem was, / I already had him / before I asked you / if I could keep him,”} said Millie.",
+"{u:“Well, / he’s here now,”} said Mum. {u:“How about a deal? / We haven’t got room / for two rats’ nests / in this house, / so if you keep your bedroom / as clean and tidy / as it’s been this week, / I’m prepared / to let Atom stay.”}",
+"Millie could not stop grinning. {i:“I will keep my room tidy. / I will!”} she said."],
+words:[["problem","prob·lem","something that is hard to sort out"],["already","al·read·y","before now"],["deal","deal","an agreement"],["prepared","pre·pared","ready and willing"],["grinning","grin·ning","smiling a big smile"]]}
+];
+const MODES=[["warm","Warm up"],["listen","Listen"],["echo","Echo read"],["play","Play a part"],["time","Time me"]];
+const TRACK=["listen","echo","play","time"];
+const NAMES={n:"Storyteller",u:"Mum",i:"Millie"};
+
+/* ---------- storage (per device, optional) ---------- */
+const KEY="ratsnests-fluency-v1";
+let store={done:{},scores:{},size:22,scoops:true,colours:true,part:0,mode:"warm"};
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)store=Object.assign(store,s);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function markDone(m){(store.done[cur]=store.done[cur]||{})[m]=1;save();renderParts();}
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
+const norm=t=>t.toLowerCase().replace(/[’‘]/g,"'").replace(/[^a-z0-9']/g,"").replace(/'/g,"");
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let cur=Math.min(store.part||0,PARTS.length-1), mode=store.mode||"warm";
+let M={phrases:[],segs:[],words:[],units:[]};
+
+function parsePara(str){
+  const out=[],re=/\{([ui]):(.*?)\}/g;let last=0,m;
+  const pushN=t=>{if(t.trim())out.push({spk:"n",text:t.trim()});};
+  while((m=re.exec(str))){pushN(str.slice(last,m.index));out.push({spk:m[1],text:m[2]});last=re.lastIndex;}
+  pushN(str.slice(last));return out;
+}
+
+function buildText(){
+  const host=$("#text");host.innerHTML="";M={phrases:[],segs:[],words:[],units:[]};
+  const P=PARTS[cur];
+  P.paras.forEach((ps,pi)=>{
+    const p=el("p");
+    if(pi===0)p.append(el("span","lnum","line "+P.l[0]));
+    parsePara(ps).forEach((s,si)=>{
+      const segEl=el("span","seg spk-"+s.spk);const seg={spk:s.spk,el:segEl,ph:[]};
+      s.text.split("/").map(x=>x.trim()).filter(Boolean).forEach((t,k)=>{
+        if(k)segEl.append(" ");
+        const ph=el("span","ph");const idx=M.phrases.length;ph.dataset.pi=idx;
+        t.split(/\s+/).forEach((tok,wi)=>{
+          if(wi)ph.append(" ");
+          const w=el("span","w",tok);ph.append(w);
+          const n=norm(tok);if(n){w.dataset.wi=M.words.length;M.words.push({el:w,n});}
+        });
+        M.phrases.push({el:ph,text:t,spk:s.spk,seg:M.segs.length,para:pi});
+        seg.ph.push(idx);segEl.append(ph);
+      });
+      if(si)p.append(" ");p.append(segEl);M.segs.push(seg);
+    });
+    host.append(p);
+  });
+  // sentence units for echo reading
+  let u=[];
+  M.phrases.forEach((ph,i)=>{
+    u.push(i);const nx=M.phrases[i+1];
+    const endsSentence=/[.!?][”’"]?$/.test(ph.text);
+    const nextLower=nx&&nx.para===ph.para&&/^[a-z]/.test(nx.text);
+    if(!nx||nx.para!==ph.para||(endsSentence&&!nextLower)){M.units.push(u);u=[];ph.end=true;}
+  });
+}
+
+/* ---------- speech ---------- */
+const TTS="speechSynthesis" in window;
+let voice=null,speed=0.9,runTok=0;const keep=[];
+function pickVoice(){
+  if(!TTS)return;const vs=speechSynthesis.getVoices();if(!vs.length)return;
+  const fem=/female|libby|sonia|serena|kate|karen|moira|samantha|tessa|google uk english female|natasha|aria|jenny/i;
+  for(const r of [/en[-_]GB/i,/en[-_]SG/i,/en[-_]AU/i,/en[-_]NZ/i,/en[-_]US/i,/^en/i]){
+    const v=vs.find(v=>r.test(v.lang)&&fem.test(v.name))||vs.find(v=>r.test(v.lang));
+    if(v){voice=v;return;}
+  }
+}
+if(TTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+const VO={n:{p:1,r:1},u:{p:.85,r:.97},i:{p:1.25,r:1.03}};
+const clean=t=>t.replace(/[“”"]/g,"").replace(/\s–(?=\s|$)/g,",");
+function say(text,spk,done,rateMul){
+  if(!TTS){done&&setTimeout(done,600);return;}
+  const tok=runTok;
+  const u=new SpeechSynthesisUtterance(text.replace(/[“”"]/g,"").replace(/\s–\s/g,", "));
+  if(voice){u.voice=voice;u.lang=voice.lang;}else u.lang="en-GB";
+  u.pitch=VO[spk].p;u.rate=VO[spk].r*speed*(rateMul||1);
+  let fired=false;const fin=()=>{if(fired)return;fired=true;keep.splice(keep.indexOf(u),1);if(tok===runTok&&done)done();};
+  u.onend=fin;u.onerror=fin;keep.push(u);speechSynthesis.speak(u);
+}
+function stopAll(){runTok++;if(TTS)speechSynthesis.cancel();clearNow();}
+function clearNow(){document.querySelectorAll(".ph.now").forEach(e=>e.classList.remove("now"));}
+/* Speak whole sentences (one speaker at a time) so the voice flows; move the highlight phrase by phrase. */
+function chunks(list){
+  const out=[];let c=null;
+  list.forEach(i=>{const ph=M.phrases[i];
+    if(!c||c.seg!==ph.seg){c={seg:ph.seg,spk:ph.spk,ids:[]};out.push(c);}
+    c.ids.push(i);if(/[.!?][”’"]?$/.test(ph.text))c=null;});
+  return out;
+}
+function playPhrases(list,onPhrase,onDone){
+  const tok=++runTok;if(TTS&&(speechSynthesis.speaking||speechSynthesis.pending))speechSynthesis.cancel();
+  const cs=chunks(list);let k=0;
+  const light=i=>{clearNow();const ph=M.phrases[i];ph.el.classList.add("now");onPhrase&&onPhrase(i);
+    try{ph.el.scrollIntoView({block:"nearest",behavior:reduce?"auto":"smooth"});}catch(e){}};
+  const next=()=>{
+    if(tok!==runTok)return;
+    if(k>=cs.length){clearNow();onDone&&onDone();return;}
+    const c=cs[k++];let text="";const starts=[];
+    c.ids.forEach((i,j)=>{if(j)text+=" ";starts.push(text.length);text+=clean(M.phrases[i].text);});
+    let curJ=-1;const setJ=j=>{if(j!==curJ){curJ=j;light(c.ids[j]);}};
+    const at=ch=>{let j=0;while(j+1<starts.length&&starts[j+1]<=ch)j++;return j;};
+    setJ(0);
+    const last=M.phrases[c.ids[c.ids.length-1]],nx=M.phrases[c.ids[c.ids.length-1]+1];
+    const gap=(!nx||nx.para!==last.para)?260:(nx.seg!==last.seg?40:120);
+    if(!TTS){setTimeout(next,1500);return;}
+    const u=new SpeechSynthesisUtterance(text);
+    if(voice){u.voice=voice;u.lang=voice.lang;}else u.lang="en-GB";
+    u.pitch=VO[c.spk].p;u.rate=VO[c.spk].r*speed;
+    let gotB=false,t0=0,fb=null,fired=false;
+    u.onstart=()=>{t0=performance.now();
+      fb=setInterval(()=>{if(gotB||tok!==runTok)return;setJ(at((performance.now()-t0)/1000*14.5*u.rate));},120);};
+    u.onboundary=e=>{if(e.name&&e.name!=="word")return;gotB=true;setJ(at(e.charIndex));};
+    const fin=()=>{if(fired)return;fired=true;clearInterval(fb);keep.splice(keep.indexOf(u),1);
+      if(tok===runTok)setTimeout(next,gap);};
+    u.onend=fin;u.onerror=fin;keep.push(u);speechSynthesis.speak(u);
+  };
+  setTimeout(next,60);
+}
+function speedToggle(){
+  const w=el("div","seg-toggle");w.setAttribute("role","group");w.setAttribute("aria-label","Reading speed");
+  [["Slow",.7],["Just right",.9],["Quick",1.1]].forEach(([n,v])=>{
+    const b=el("button",null,n);b.setAttribute("aria-pressed",String(speed===v));
+    b.onclick=()=>{speed=v;w.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));};
+    w.append(b);
+  });
+  return w;
+}
+const noTTSNote=()=>TTS?null:el("p","note","This browser can’t read aloud. Try Chrome, Edge or Safari.");
+
+/* ---------- UI shells ---------- */
+function renderParts(){
+  const host=$("#parts");host.innerHTML="";
+  PARTS.forEach((P,i)=>{
+    const b=el("button","part");b.setAttribute("aria-pressed",String(i===cur));
+    b.append(el("b",null,String(i+1)),el("small",null,P.t),el("small",null,"Lines "+P.l[0]+"–"+P.l[1]));
+    const d=el("span","dots");const done=store.done[i]||{};
+    TRACK.forEach(m=>{const x=el("i");if(done[m])x.className="on";x.title=m;d.append(x);});
+    b.append(d);b.setAttribute("aria-label","Part "+(i+1)+": "+P.t);
+    b.onclick=()=>{if(i===cur)return;cur=i;store.part=i;save();renderParts();setMode(mode);};
+    host.append(b);
+  });
+}
+function renderModes(){
+  const host=$("#modes");host.innerHTML="";
+  MODES.forEach(([k,n],i)=>{
+    const b=el("button","mode");b.setAttribute("aria-pressed",String(k===mode));
+    b.append(el("span",null,String(i+1)),document.createTextNode(n));
+    b.onclick=()=>setMode(k);host.append(b);
+  });
+}
+function setMode(k){
+  stopAll();micStop();clearInterval(timerInt);
+  mode=k;store.mode=k;save();renderModes();buildText();
+  const t=$("#text");t.classList.remove("listen","marking");
+  const pan=$("#panel");pan.innerHTML="";
+  ({warm:modeWarm,listen:modeListen,echo:modeEcho,play:modePlay,time:modeTime})[k](pan,t);
+}
+
+/* ---------- 1 Warm up ---------- */
+function modeWarm(pan){
+  const P=PARTS[cur];
+  pan.append(el("h2",null,"Warm up: tricky words"),
+    el("p",null,"Tap a word to hear it. Clap the beats. Then find it in the story — it lights up below."));
+  const g=el("div","words");
+  P.words.forEach(([w,syl,mean])=>{
+    const c=el("button","wc");c.append(el("b",null,w),el("span","syl",syl));if(mean)c.append(el("span","mean",mean));
+    c.onclick=()=>{
+      stopAll();say(w,"n",null,.75);
+      const key=norm(w).slice(0,Math.max(4,norm(w).length-2));
+      document.querySelectorAll(".w.found").forEach(x=>x.classList.remove("found"));
+      const hits=M.words.filter(x=>x.n.startsWith(key));
+      hits.forEach(x=>x.el.classList.add("found"));
+      if(hits[0])try{hits[0].el.scrollIntoView({block:"nearest",behavior:reduce?"auto":"smooth"});}catch(e){}
+      setTimeout(()=>hits.forEach(x=>x.el.classList.remove("found")),2600);
+    };
+    g.append(c);
+  });
+  pan.append(g);const n=noTTSNote();if(n)pan.append(n);
+  const r=el("div","row");const go=el("button","b go","Next: Listen →");go.onclick=()=>setMode("listen");r.append(go);pan.append(r);
+}
+
+/* ---------- 2 Listen ---------- */
+function modeListen(pan,t){
+  t.classList.add("listen");let pos=0;
+  pan.append(el("h2",null,"Listen and follow"),
+    el("p",null,"Follow the yellow highlight with your finger. Listen for how Mum and Millie sound different. Tap any phrase to start from there."));
+  const r=el("div","row");
+  const play=el("button","b big","▶ Play");const pause=el("button","b alt","⏸ Pause");const restart=el("button","b alt","■ Stop");
+  pause.disabled=true;
+  const start=()=>{play.disabled=true;pause.disabled=false;
+    const list=[];for(let i=pos;i<M.phrases.length;i++)list.push(i);
+    playPhrases(list,i=>{pos=i;},()=>{pos=0;play.disabled=false;pause.disabled=true;play.textContent="▶ Play again";markDone("listen");});};
+  play.onclick=start;
+  pause.onclick=()=>{stopAll();play.disabled=false;pause.disabled=true;play.textContent="▶ Carry on";};
+  restart.onclick=()=>{stopAll();pos=0;play.disabled=false;pause.disabled=true;play.textContent="▶ Play";};
+  t.onclick=e=>{if(mode!=="listen")return;const ph=e.target.closest(".ph");if(!ph)return;stopAll();pos=+ph.dataset.pi;start();};
+  r.append(play,pause,restart,speedToggle());pan.append(r);
+  const n=noTTSNote();if(n)pan.append(n);
+}
+
+/* ---------- 3 Echo ---------- */
+function modeEcho(pan){
+  let u=0,heard=false;
+  pan.append(el("h2",null,"Echo read"),el("p",null,"Listen to one sentence. Then read it out loud the same way — same speed, same feeling."));
+  const info=el("div","row");const count=el("span","pill");const cue=el("span","cue");info.append(count,cue);
+  const r=el("div","row");
+  const back=el("button","b alt","←");back.setAttribute("aria-label","Previous sentence");
+  const hear=el("button","b big","▶ Hear it");const next=el("button","b go","Next sentence →");
+  const estop=el("button","b alt","■ Stop");estop.onclick=()=>{stopAll();cue.textContent="";};
+  r.append(back,hear,estop,next,speedToggle());pan.append(info,r);
+  const n=noTTSNote();if(n)pan.append(n);
+  const show=()=>{
+    const set=new Set(M.units[u]);
+    M.phrases.forEach((p,i)=>{p.el.classList.toggle("dim",!set.has(i));});
+    M.segs.forEach(s=>s.el.classList.remove("yours"));
+    count.textContent="Sentence "+(u+1)+" of "+M.units.length;
+    cue.textContent=heard?"Your turn! Read it out loud.":"";
+    hear.textContent=heard?"↻ Hear again":"▶ Hear it";
+    back.disabled=u===0;next.textContent=u===M.units.length-1?"Finish ✓":"Next sentence →";
+    try{M.phrases[M.units[u][0]].el.scrollIntoView({block:"nearest",behavior:reduce?"auto":"smooth"});}catch(e){}
+  };
+  hear.onclick=()=>{cue.textContent="Listen…";playPhrases(M.units[u],null,()=>{heard=true;
+    M.units[u].forEach(i=>M.phrases[i].el.classList.add("now"));show();});};
+  next.onclick=()=>{stopAll();if(u===M.units.length-1){markDone("echo");cue.textContent="Well done! You echoed the whole part.";return;}u++;heard=false;show();hear.click();};
+  back.onclick=()=>{stopAll();u=Math.max(0,u-1);heard=false;show();};
+  show();
+}
+
+/* ---------- 4 Play a part ---------- */
+let waitNext=null;
+function modePlay(pan){
+  let role=null,s=0;
+  pan.append(el("h2",null,"Play a part"),el("p",null,"Pick a character. The computer reads the other parts. When your line lights up green, read it with feeling, then tap the button."));
+  const pick=el("div","row");const roles={};
+  ["i","u","n"].forEach(k=>{const b=el("button","b alt",NAMES[k]);b.onclick=()=>choose(k);roles[k]=b;pick.append(b);});
+  const r=el("div","row");const go=el("button","b big","▶ Play");go.disabled=true;
+  const pstop=el("button","b alt","■ Stop");pstop.disabled=true;
+  const mine=el("button","b go big","I read my line ✓");mine.hidden=true;
+  const cue=el("span","cue");r.append(go,pstop,mine,cue);
+  pstop.onclick=()=>{stopAll();waitNext=null;s=0;mine.hidden=true;cue.textContent="";M.segs.forEach(sg=>sg.el.classList.remove("yours"));go.disabled=!role;go.textContent="▶ Play as "+NAMES[role];pstop.disabled=true;};
+  pan.append(pick,r,speedToggle());const n=noTTSNote();if(n)pan.append(n);
+  function choose(k){stopAll();role=k;s=0;waitNext=null;mine.hidden=true;cue.textContent="";
+    Object.entries(roles).forEach(([kk,b])=>{b.className="b "+(kk===k?"":"alt");});
+    M.segs.forEach(sg=>{sg.el.classList.toggle("mine",sg.spk===k);sg.el.classList.remove("yours");});
+    go.disabled=false;pstop.disabled=true;go.textContent="▶ Play as "+NAMES[k];}
+  function step(){
+    M.segs.forEach(sg=>sg.el.classList.remove("yours"));
+    if(s>=M.segs.length){cue.textContent="The end! Now swap parts and play again.";go.textContent="▶ Play again";go.disabled=false;pstop.disabled=true;mine.hidden=true;s=0;markDone("play");return;}
+    const sg=M.segs[s];
+    if(sg.spk===role){
+      sg.el.classList.add("yours");mine.hidden=false;cue.textContent="Your line!";
+      try{sg.el.scrollIntoView({block:"nearest",behavior:reduce?"auto":"smooth"});}catch(e){}
+      waitNext=()=>{waitNext=null;mine.hidden=true;cue.textContent="";s++;step();};
+    }else{cue.textContent="";playPhrases(sg.ph,null,()=>{s++;step();});}
+  }
+  go.onclick=()=>{go.disabled=true;pstop.disabled=false;s=0;step();};
+  mine.onclick=()=>waitNext&&waitNext();
+}
+document.addEventListener("keydown",e=>{if(mode==="play"&&waitNext&&(e.key===" "||e.key==="Enter")&&!e.target.closest("button")){e.preventDefault();waitNext();}});
+
+/* ---------- 5 Time me ---------- */
+let timerInt=null;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,micOn=false,micPtr=0,micBlocked=false;
+function micStart(note){
+  if(!SR||micBlocked)return;micPtr=0;micOn=true;
+  try{rec=new SR();}catch(e){micOn=false;return;}
+  rec.lang="en-GB";rec.continuous=true;rec.interimResults=false;
+  rec.onresult=e=>{for(let r=e.resultIndex;r<e.results.length;r++)if(e.results[r].isFinal)consume(e.results[r][0].transcript);};
+  rec.onerror=e=>{if(/not-allowed|service-not-allowed|audio-capture/.test(e.error)){micBlocked=true;micOn=false;note.textContent="The mic isn’t available here, so a partner can mark the words instead.";}};
+  rec.onend=()=>{if(micOn&&!micBlocked)try{rec.start();}catch(e){}};
+  try{rec.start();}catch(e){micOn=false;}
+}
+function micStop(){micOn=false;if(rec)try{rec.stop();}catch(e){}rec=null;}
+function consume(t){
+  t.split(/\s+/).map(norm).filter(Boolean).forEach(sw=>{
+    for(let j=micPtr;j<Math.min(micPtr+5,M.words.length);j++){
+      const tw=M.words[j].n;
+      if(sw===tw||(sw.length>3&&tw.length>3&&sw.slice(0,4)===tw.slice(0,4))){M.words[j].el.classList.add("heard");micPtr=j+1;break;}
+    }
+  });
+}
+function modeTime(pan,t){
+  const total=M.words.length;let t0=0,secs=0,state="idle";
+  pan.append(el("h2",null,"Time me"),el("p",null,"Read the whole part out loud. Tap Start, read, then tap Stop. A partner or teacher taps any words you missed or got wrong."));
+  const r=el("div","row");const clock=el("span","timer","0:00");
+  const startB=el("button","b go big","▶ Start reading");const stopB=el("button","b big","■ Stop");stopB.hidden=true;
+  const again=el("button","b alt","↺ Try again");again.hidden=true;
+  r.append(clock,startB,stopB,again);pan.append(r);
+  let micBox=null,micNote=el("p","note");
+  if(SR&&!micBlocked){
+    const lab=el("label","row");micBox=el("input");micBox.type="checkbox";micBox.id="micFollow";
+    lab.append(micBox,document.createTextNode(" Let the mic follow me (words turn green as you read)"));
+    lab.style.fontSize=".95rem";pan.append(lab);
+  }
+  pan.append(micNote);
+  const res=el("div");res.hidden=true;pan.append(res);
+  const fmt=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
+  startB.onclick=()=>{
+    state="run";t0=performance.now();startB.hidden=true;stopB.hidden=false;again.hidden=true;res.hidden=true;
+    M.words.forEach(w=>w.el.classList.remove("miss","heard"));t.classList.remove("marking");
+    timerInt=setInterval(()=>{clock.textContent=fmt((performance.now()-t0)/1000);},200);
+    if(micBox&&micBox.checked)micStart(micNote);
+  };
+  stopB.onclick=()=>{
+    secs=(performance.now()-t0)/1000;clearInterval(timerInt);clock.textContent=fmt(secs);
+    const usedMic=micOn||micPtr>0;micStop();
+    if(usedMic&&micPtr>0){for(let j=0;j<micPtr;j++)if(!M.words[j].el.classList.contains("heard"))M.words[j].el.classList.add("miss");
+      micNote.textContent="The mic marked some words red. It can make mistakes, so tap to fix them.";}
+    state="mark";stopB.hidden=true;again.hidden=false;t.classList.add("marking");showRes();
+  };
+  again.onclick=()=>{state="idle";res.hidden=true;again.hidden=true;startB.hidden=false;clock.textContent="0:00";micNote.textContent="";
+    M.words.forEach(w=>w.el.classList.remove("miss","heard"));t.classList.remove("marking");};
+  t.onclick=e=>{if(mode!=="time"||state!=="mark")return;const w=e.target.closest(".w");if(!w||w.dataset.wi==null)return;w.classList.toggle("miss");showRes();};
+  function showRes(){
+    const miss=M.words.filter(w=>w.el.classList.contains("miss")).length;
+    const wcpm=secs>0?Math.round((total-miss)/(secs/60)):0;const acc=Math.round((total-miss)/total*100);
+    res.hidden=false;res.innerHTML="";
+    const g=el("div","results");
+    const st=(v,l,h)=>{const d=el("div","stat"+(h?" hero":""));d.append(el("b",null,v),el("small",null,l));return d;};
+    g.append(st(wcpm,"words correct per minute",1),st(acc+"%","accuracy"),st(total-miss+" / "+total,"words read correctly"),st(fmt(secs),"time"));
+    res.append(el("p","label","Tap words in the story to mark mistakes"),g);
+    res.append(el("p","label","How did my reading sound?"));
+    const ch=el("div","checks");
+    ["I read smoothly, not word by word","I paused at commas and full stops","I read at a good speed","I made Mum and Millie sound different"].forEach((q,i)=>{
+      const lb=el("label");const cb=el("input");cb.type="checkbox";cb.id="chk"+i;lb.append(cb,document.createTextNode(q));ch.append(lb);});
+    res.append(ch);
+    const sv=el("div","row");const saveB=el("button","b go","Save my score");
+    saveB.onclick=()=>{(store.scores[cur]=store.scores[cur]||[]).push({w:wcpm,a:acc,d:Date.now()});store.scores[cur]=store.scores[cur].slice(-8);save();markDone("time");saveB.disabled=true;saveB.textContent="Saved ✓";drawTries();};
+    sv.append(saveB);res.append(sv);
+    const tries=el("div","tries");tries.id="tries";res.append(tries);drawTries();
+  }
+  function drawTries(){
+    const host=document.getElementById("tries");if(!host)return;host.innerHTML="";
+    const sc=store.scores[cur]||[];if(!sc.length)return;
+    const best=Math.max(...sc.map(x=>x.w));
+    host.append(el("span","label","My tries:"));
+    sc.forEach(x=>host.append(el("span","pill",x.w+(x.w===best?" ★":""))));
+  }
+  const prev=store.scores[cur]||[];
+  if(prev.length){const best=Math.max(...prev.map(x=>x.w));pan.append(el("p","note","Your best for this part: "+best+" words correct per minute. Can you beat it?"));}
+}
+
+/* ---------- toggles ---------- */
+function applyView(){
+  const t=$("#text");t.classList.toggle("scoops",store.scoops);t.classList.toggle("colours",store.colours);
+  t.style.setProperty("--rs",store.size+"px");
+  $("#tScoop").setAttribute("aria-pressed",String(store.scoops));$("#tCol").setAttribute("aria-pressed",String(store.colours));
+}
+$("#tScoop").onclick=()=>{store.scoops=!store.scoops;save();applyView();};
+$("#tCol").onclick=()=>{store.colours=!store.colours;save();applyView();};
+$("#fMinus").onclick=()=>{store.size=Math.max(16,store.size-2);save();applyView();};
+$("#fPlus").onclick=()=>{store.size=Math.min(34,store.size+2);save();applyView();};
+
+renderParts();applyView();setMode(MODES.some(m=>m[0]===mode)?mode:"warm");
+</script>
+
+</body>
+</html>
